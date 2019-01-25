@@ -89,6 +89,7 @@ const utils = {
  */
 class Query {
     constructor(select, parent) {
+        parent = utils.getElement(parent);
         this.element = utils.getElement(select, parent);
 
         this.length = 0;
@@ -237,3 +238,10 @@ class Query {
         return this;
     }
 }
+
+/**
+ * create Query instance
+ * @param {string|Object} select dom selcet
+ * @param {Object} parent parent select
+ */
+const $ = (select, parent) => new Query(select, parent);
