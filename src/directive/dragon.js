@@ -106,21 +106,17 @@ class Query {
         }
     }
 
+    /**
+     * set css style
+     * @param {string|Object} style css styles
+     */
     css(style) {
         if (!this.length) {
             return this;
         }
 
         if (utils.typeof(style) === 'object') {
-            if (this.length === 1) {
-                Object.keys(style).forEach((item) => {
-                    this.element.style[item] = style[item];
-                });
-
-                return this;
-            }
-
-            for (let i = 0; i < this.length; i++) {
+            for (let i = 0; i < this.length; i += 1) {
                 Object.keys(style).forEach((item) => {
                     this[i].style[item] = style[item];
                 });
@@ -131,4 +127,113 @@ class Query {
 
         return this[0].style[style];
     }
-};
+
+    /**
+     * bind event
+     * @param {string} event event name
+     * @param {*} handle event callback
+     */
+    on(event, handle) {
+        for (let i = 0; i < this.length; i += 1) {
+            utils.bindEvent(this[i], event, handle);
+        }
+
+        return this;
+    }
+
+    /**
+    * unbind event
+    * @param {string} event event name
+    * @param {*} handle event callback
+    */
+    unbind(event, handle) {
+        for (let i = 0; i < this.length; i += 1) {
+            utils.unbindEvent(this[i], event, handle);
+        }
+
+        return this;
+    }
+
+    /**
+     * check has class
+     * @param {string} name class name
+     */
+    hasClass(name) {
+        const rep = new RegExp(`(^|\\s)${name}(\\s|$)`);
+        return this[0] ? rep.test(this[0].className) : '';
+    }
+
+    /**
+     * dom add class name
+     * @param {string} name class name
+     */
+    addClass(name) {
+        for (let i = 0; i < this.length; i += 1) {
+            this[i].className = `${this[i].className} ${name}`;
+        }
+
+        return this;
+    }
+
+    /**
+     * clone dom
+     */
+    clone() {
+        return new Query(this[0].cloneNode(true));
+    }
+
+    /**
+     * get dom parent
+     */
+    parent() {
+        return this[0] ? new Query(this[0].parentNode) : new Query();
+    }
+
+    /**
+     * append inner
+     * @param {string|Object} str inner
+     */
+    append(str) {
+        if (typeof str === 'string') {
+            this[0].innerHTML += str;
+        } else if (typeof str === 'object') {
+            this[0].appendChild(str);
+        }
+
+        return this;
+    }
+
+    /**
+     * set/get dom attribute
+     * @param {string} name attribute name
+     * @param {string} val attribute value
+     */
+    attr(name, val) {
+        return val ? this[0].setAttribute(name, val) : this[0].getAttribute(name);
+    }
+
+    /**
+     * find dom
+     * @param {string|Object} name dom name or dom Object
+     */
+    find(name) {
+        return new Query(name, this[0]);
+    }
+
+    /**
+     * remove dom self
+     */
+    remove() {
+        this.parent()[0].removeChild(this[0]);
+    }
+
+    /**
+     * remove class name
+     * @param {string} name class name
+     */
+    removeClass(name) {
+        this[0].className.replace(name, '');
+
+        return this;
+    }
+}
