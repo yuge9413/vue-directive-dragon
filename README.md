@@ -1,5 +1,7 @@
 # vue-directive-dragon
 
+`Vue` 拖拽指令，使用 `Vue` 版本为：`2.5.21`
+
 ## Project setup
 ```
 yarn install
