@@ -4,7 +4,7 @@
  * @description vue拖拽指令
  */
 
-import Vue from 'vue';
+// import Vue from 'vue';
 
 /**
  * 工具对象
@@ -80,7 +80,7 @@ const utils = {
         }
 
         // use getElementsByTagName
-        return parent.getElementsByTagName(str.replace('#', ''));
+        return parent.getElementsByTagName(str);
     },
 
     /**
@@ -93,10 +93,10 @@ const utils = {
         }
 
         const box = element.getBoundingClientRect();
-        const body = { document };
+        const { body } = document;
         const xPosition = box.left + body.scrollLeft;
         const yPosition = box.top + body.scrollTop;
-        const { width, height } = { box };
+        const { width, height } = box;
 
         return {
             left: xPosition,
@@ -120,6 +120,19 @@ const utils = {
             parent.insertBefore(element, target.nextSibling);
         }
     },
+
+    getElementBehindPoint(behind, x, y) {
+        const originalDisplay = behind.css('display');
+
+        behind.css({ display: 'none' });
+
+        // eslint-disable-next-line no-use-before-define
+        const element = $(document.elementFromPoint(x, y));
+
+        behind.css({ display: originalDisplay });
+
+        return element;
+    },
 };
 
 /**
@@ -135,10 +148,10 @@ class Query {
         if (this.element) {
             this.length = this.element.length || this.element.length === 0 ? this.element.length : 1;
 
-            if (this.length === 1) {
+            if (this.length === 1 && !this.element.length) {
                 this[0] = this.element;
             } else {
-                this.element.forEach((item, index) => {
+                Array.prototype.slice.call(this.element).forEach((item, index) => {
                     this[index] = item;
                 });
             }
@@ -289,29 +302,141 @@ const $ = (select, parent) => new Query(select, parent);
  */
 class Dragon {
     constructor(element, param, vm) {
-        let start = false;
+        // is start or not
+        this.start = false;
 
-        let index = 0;
+        // directive dom
+        this.element = $(element);
 
-        let floaty = null;
+        // target dom
+        this.targetElement = $(element);
 
-        let offsetX = 0;
+        // directive param
+        this.param = {
+            // 拖拽类型: 1为只能拖动，不涉及数据
+            // 2为左右移动，涉及数据交换
+            // 3为上下拖动，涉及数据交换
+            type: 1,
+            // target dom's class(.xxx) or id(#xxx)
+            target: '',
+            ...param,
+        };
 
-        let offsetY = 0;
+        // vue instance
+        this.vueInstance = vm;
 
-        let isEnd = true;
+        // 获取目标元素
+        if (
+            this.param.target
+            && $(this.param.target, this.element[0]).length
+        ) {
+            this.targetElement = $(this.param.target, this.element[0]);
+        }
 
-        let isClick = fasle;
+        // set dom text disable
+        this.disableStyle = {
+            '-moz-user-select': '-moz-none',
+            '-khtml-user-select': 'none',
+            '-webkit-user-select': 'none',
+            '-ms-user-select': 'none',
+            'user-select': 'none',
+        };
 
+        // set dom text enable
+        this.enableStyle = {
+            '-moz-user-select': '',
+            '-khtml-user-select': '',
+            '-webkit-user-select': '',
+            '-ms-user-select': '',
+            'user-select': '',
+        };
 
+        // bind mousedown for document
+        this.targetElement.on('mousedown', e => this.startDrag(e));
     }
 
     drag(event) {
-        let x = event.clientX - this.offsetX;
-        let y = event.clientY - this.offsetY;
+        if (!this.start) {
+            return;
+        }
+        this.spawnFloaty(this.element, event);
 
-        // !this.floaty &&
+        if (this.floaty) {
+            const left = event.pageX - this.offsetX >= 0 ? event.pageX - this.offsetX : 0;
+            const top = event.pageY - this.offsetY >= 0 ? event.pageY - this.offsetY : 0;
+            this.floaty.css({
+                left: `${left}px`,
+                top: `${top}px`,
+            });
+        }
     }
 
+    disableSelect() {
+        $(document.body).css(this.disableStyle);
+    }
 
+    enableSelect() {
+        $(document.body).css(this.enableStyle);
+    }
+
+    startDrag(event) {
+        this.offset = utils.getElementOffset(this.element[0]);
+        this.pageY = event.pageY;
+        this.offsetX = (event.pageX - this.offset.left);
+        this.offsetY = (event.pageY - this.offset.top);
+        this.start = true;
+
+        $(document).on('mousemove', e => this.drag(e));
+        $(document).on('mouseup', e => this.endDrag(e));
+    }
+
+    endDrag() {
+        this.start = false;
+
+        $(document).unbind('mousemove', e => this.drag(e));
+        $(document).unbind('mouseup', e => this.endDrag(e));
+
+        this.enableSelect();
+
+        if (this.floaty && this.param.type !== 1) {
+            this.floaty.remove();
+            this.floaty = null;
+        }
+        this.floaty = null;
+    }
+
+    // eslint-disable-next-line class-methods-use-this
+    spawnFloaty(element, event) {
+        const offset = utils.getElementOffset(element[0]);
+        if (this.param.type === 1) {
+            this.floaty = element;
+            this.floaty.css({ position: 'fixed', margin: '0px', 'z-index': '9999999999' });
+        } else {
+            this.floaty = element.clone();
+            this.floaty.addClass('vue-dragon-clone');
+            element.css({ opacity: 0 });
+            this.floaty.css({ opacity: 1, width: `${offset.width}px`, padding: '0px' });
+            this.floaty.css({ left: `${event.clientX - event.pageX + offset.left}px` });
+            $(document.body).append(this.floaty);
+        }
+
+        this.floaty.css({ position: 'fixed', margin: '0px', 'z-index': '9999999999' });
+
+        this.disableSelect();
+    }
 }
+
+export default {
+    install(Vue) {
+        /**
+         * 注册全局指令
+         */
+        Vue.directive('dragon', {
+            inserted(el, binding, vm) {
+                const value = binding.value || {};
+                // eslint-disable-next-line no-new
+                new Dragon(el, value, vm);
+            },
+        });
+    },
+};
