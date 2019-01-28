@@ -82,6 +82,44 @@ const utils = {
         // use getElementsByTagName
         return parent.getElementsByTagName(str.replace('#', ''));
     },
+
+    /**
+     * get element offset
+     * @param {Object} element dom object
+     */
+    getElementOffset(element) {
+        if (!element || !element.getBoundingClientRect) {
+            return {};
+        }
+
+        const box = element.getBoundingClientRect();
+        const body = { document };
+        const xPosition = box.left + body.scrollLeft;
+        const yPosition = box.top + body.scrollTop;
+        const { width, height } = { box };
+
+        return {
+            left: xPosition,
+            top: yPosition,
+            width,
+            height,
+        };
+    },
+
+    /**
+     * insert after dom
+     * @param {Object} element dom object
+     * @param {Object} target target dom object
+     */
+    insertAfter(element, target) {
+        const parent = target.parentNode;
+
+        if (parent.lastChild === target) {
+            parent.appendChild(element);
+        } else {
+            parent.insertBefore(element, target.nextSibling);
+        }
+    },
 };
 
 /**
@@ -245,3 +283,35 @@ class Query {
  * @param {Object} parent parent select
  */
 const $ = (select, parent) => new Query(select, parent);
+
+/**
+ * dragon class
+ */
+class Dragon {
+    constructor(element, param, vm) {
+        let start = false;
+
+        let index = 0;
+
+        let floaty = null;
+
+        let offsetX = 0;
+
+        let offsetY = 0;
+
+        let isEnd = true;
+
+        let isClick = fasle;
+
+
+    }
+
+    drag(event) {
+        let x = event.clientX - this.offsetX;
+        let y = event.clientY - this.offsetY;
+
+        // !this.floaty &&
+    }
+
+
+}
