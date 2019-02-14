@@ -362,8 +362,16 @@ class Dragon {
         this.spawnFloaty(this.element, event);
 
         if (this.floaty) {
-            const left = event.pageX - this.offsetX >= 0 ? event.pageX - this.offsetX : 0;
-            const top = event.pageY - this.offsetY >= 0 ? event.pageY - this.offsetY : 0;
+            let left;
+            let top;
+            const height = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
+
+            left = event.pageX - this.offsetX >= 0 ? event.pageX - this.offsetX : 0;
+            left = left + this.offset.width >= window.screen.width ? window.screen.width - this.offset.width : left;
+
+            top = event.pageY - this.offsetY >= 0 ? event.pageY - this.offsetY : 0;
+            top = top + this.offset.height >= height ? height - this.offset.height : top;
+
             this.floaty.css({
                 left: `${left}px`,
                 top: `${top}px`,
