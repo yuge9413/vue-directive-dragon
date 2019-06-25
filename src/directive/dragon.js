@@ -333,6 +333,9 @@ class Dragon {
             this.targetElement = $(this.param.target, this.element[0]);
         }
 
+        // add drag mouse style
+        this.targetElement.css({'cursor': 'move'});
+
         // set dom text disable
         this.disableStyle = {
             '-moz-user-select': '-moz-none',
