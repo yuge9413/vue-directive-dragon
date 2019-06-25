@@ -4,7 +4,6 @@
  * @description vue拖拽指令
  */
 
-// import Vue from 'vue';
 
 /**
  * 工具对象
@@ -313,7 +312,8 @@ class Dragon {
 
         // directive param
         this.param = {
-            // 拖拽类型: 1为只能拖动，不涉及数据
+            // 拖拽类型:
+            // 1为只能拖动，不涉及数据
             // 2为左右移动，涉及数据交换
             // 3为上下拖动，涉及数据交换
             type: 1,
@@ -355,16 +355,23 @@ class Dragon {
         this.targetElement.on('mousedown', e => this.startDrag(e));
     }
 
+    /**
+     * drag event
+     * @param {Object} event event object
+     */
     drag(event) {
         if (!this.start) {
             return;
         }
+
         this.spawnFloaty(this.element, event);
 
         if (this.floaty) {
             let left;
             let top;
-            const height = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
+            const height = window.innerHeight
+                || document.documentElement.clientHeight
+                || document.body.clientHeight;
 
             left = event.pageX - this.offsetX >= 0 ? event.pageX - this.offsetX : 0;
             left = left + this.offset.width >= window.screen.width ? window.screen.width - this.offset.width : left;
@@ -379,14 +386,24 @@ class Dragon {
         }
     }
 
+    /**
+     * disable select text
+     */
     disableSelect() {
         $(document.body).css(this.disableStyle);
     }
 
+    /**
+     * enable select text
+     */
     enableSelect() {
         $(document.body).css(this.enableStyle);
     }
 
+    /**
+     * start drag event
+     * @param {Object} event object
+     */
     startDrag(event) {
         this.offset = utils.getElementOffset(this.element[0]);
         this.pageY = event.pageY;
@@ -398,6 +415,9 @@ class Dragon {
         $(document).on('mouseup', e => this.endDrag(e));
     }
 
+    /**
+     * end drag
+     */
     endDrag() {
         this.start = false;
 
@@ -413,18 +433,32 @@ class Dragon {
         this.floaty = null;
     }
 
-    // eslint-disable-next-line class-methods-use-this
+    /**
+     * drag dom
+     * @param {*} element $(dom)
+     * @param {*} event event object
+     */
     spawnFloaty(element, event) {
         const offset = utils.getElementOffset(element[0]);
+
+        // only drag dom
         if (this.param.type === 1) {
             this.floaty = element;
             this.floaty.css({ position: 'fixed', margin: '0px', 'z-index': '9999999999' });
+        // drag dom and change data
         } else {
             this.floaty = element.clone();
+            // eslint-disable-next-line class-methods-use-this
             this.floaty.addClass('vue-dragon-clone');
             element.css({ opacity: 0 });
             this.floaty.css({ opacity: 1, width: `${offset.width}px`, padding: '0px' });
-            this.floaty.css({ left: `${event.clientX - event.pageX + offset.left}px` });
+
+            if (this.param.type === 2) {
+                this.floaty.css({ left: `${event.clientX - event.pageX + offset.left}px` });
+            } else {
+                this.floaty.css({ top: `${event.clientY - event.pageY + offset.top}px` });
+            }
+
             $(document.body).append(this.floaty);
         }
 
