@@ -334,7 +334,7 @@ class Dragon {
         }
 
         // add drag mouse style
-        this.targetElement.css({'cursor': 'move'});
+        this.targetElement.addClass('v-dragon-element').css({ cursor: 'move' });
 
         // set dom text disable
         this.disableStyle = {
@@ -367,25 +367,31 @@ class Dragon {
             return;
         }
 
-        this.spawnFloaty(this.element, event);
+        if (!this.floaty) {
+            this.spawnFloaty(this.param.type === 1 ? this.element : this.targetElement, event);
+        }
 
-        if (this.floaty) {
-            let left;
-            let top;
-            const height = window.innerHeight
-                || document.documentElement.clientHeight
-                || document.body.clientHeight;
+        let left;
+        let top;
+        const height = window.innerHeight
+            || document.documentElement.clientHeight
+            || document.body.clientHeight;
 
-            left = event.pageX - this.offsetX >= 0 ? event.pageX - this.offsetX : 0;
-            left = left + this.offset.width >= window.screen.width ? window.screen.width - this.offset.width : left;
+        left = event.pageX - this.offsetX >= 0 ? event.pageX - this.offsetX : 0;
+        left = left + this.offset.width >= window.screen.width ? window.screen.width - this.offset.width : left;
 
-            top = event.pageY - this.offsetY >= 0 ? event.pageY - this.offsetY : 0;
-            top = top + this.offset.height >= height ? height - this.offset.height : top;
+        top = event.pageY - this.offsetY >= 0 ? event.pageY - this.offsetY : 0;
+        top = top + this.offset.height >= height ? height - this.offset.height : top;
 
+        if (this.param.type === 1) {
             this.floaty.css({
                 left: `${left}px`,
                 top: `${top}px`,
             });
+        } else if (this.param.type === 2) {
+            this.floaty.css({ left: `${left}px` });
+        } else {
+            this.floaty.css({ top: `${top}px` });
         }
     }
 
@@ -414,6 +420,12 @@ class Dragon {
         this.offsetY = (event.pageY - this.offset.top);
         this.start = true;
 
+        // if (this.param.type !== 1) {
+        //     var target = event.target;
+
+        //     if (target !==)
+        // }
+
         $(document).on('mousemove', e => this.drag(e));
         $(document).on('mouseup', e => this.endDrag(e));
     }
@@ -432,6 +444,8 @@ class Dragon {
         if (this.floaty && this.param.type !== 1) {
             this.floaty.remove();
             this.floaty = null;
+
+            this.targetElement.css({ opacity: 1 });
         }
         this.floaty = null;
     }
@@ -462,7 +476,7 @@ class Dragon {
                 this.floaty.css({ top: `${event.clientY - event.pageY + offset.top}px` });
             }
 
-            $(document.body).append(this.floaty);
+            $(document.body).append(this.floaty[0]);
         }
 
         this.floaty.css({ position: 'fixed', margin: '0px', 'z-index': '9999999999' });
