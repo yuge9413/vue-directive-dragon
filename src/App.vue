@@ -13,10 +13,11 @@
 
         <div
             class="li-box"
-            v-dragon="{target: 'li', type: 3}"
+            v-dragon="{target: '.li', type: 3, dataName: 'testData'}"
         >
             <ul>
                 <li
+                    class="li"
                     v-for="item in testData"
                     :key="item.text"
                 >
@@ -104,11 +105,12 @@ export default {
     width: 400px;
     height: 40px;
     line-height: 40px;
-    border: 1px solid #dadada;
-    border-bottom: none;
+    background-color: #eee;
+    border: 1px solid #fff;
+    /* border-bottom: none; */
 }
 
-.li-box ul li:last-child {
+/* .li-box ul li:last-child {
     border-bottom: 1px solid #dadada;
-}
+} */
 </style>

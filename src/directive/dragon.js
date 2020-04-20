@@ -120,17 +120,55 @@ const utils = {
         }
     },
 
-    getElementBehindPoint(behind, x, y) {
+    getElementBehindPoint(behind, x, y, name) {
         const originalDisplay = behind.css('display');
 
         behind.css({ display: 'none' });
 
         // eslint-disable-next-line no-use-before-define
-        const element = $(document.elementFromPoint(x, y));
+        let element = $(document.elementFromPoint(x, y));
+
+        while (element[0] && !element.hasClass(name.replace(/[.#]+/g, ''))) {
+            element = element.parent();
+        }
 
         behind.css({ display: originalDisplay });
 
         return element;
+    },
+
+    getStyle(el, name) {
+        let style = null;
+
+        if (window.getComputedStyle) {
+            style = window.getComputedStyle(el, null);
+        } else {
+            style = el.currentStyle;
+        }
+
+        if (!name) {
+            return style.cssText;
+        }
+
+        name = name.replace(/-(\w)/g, (all, letter) => letter.toUpperCase());
+
+        return style[name];
+    },
+
+    setStyleTag(name, css) {
+        let style = document.getElementById('dragon-clone-dom-css');
+
+        if (style && style.innerHTML.indexOf(name) === -1) {
+            style.innerHTML += `.${name} { ${css} }`;
+        }
+
+        if (!style) {
+            style = document.createElement('style');
+            style.type = 'text/css';
+            style.id = 'dragon-clone-dom-css';
+            style.innerHTML = `.${name} { ${css} }`;
+            document.getElementsByTagName('head')[0].appendChild(style);
+        }
     },
 };
 
@@ -211,7 +249,7 @@ class Query {
      */
     hasClass(name) {
         const rep = new RegExp(`(^|\\s)${name}(\\s|$)`);
-        return this[0] ? rep.test(this[0].className) : '';
+        return this[0] ? rep.test(this[0].className) : false;
     }
 
     /**
@@ -238,6 +276,14 @@ class Query {
      */
     parent() {
         return this[0] ? new Query(this[0].parentNode) : new Query();
+    }
+
+    children() {
+        return this[0] ? new Query(this[0].children) : new Query();
+    }
+
+    index(element) {
+        return Array.prototype.slice.call(this.parent().children()).indexOf(element[0]);
     }
 
     /**
@@ -287,6 +333,20 @@ class Query {
 
         return this;
     }
+
+    /**
+     * get target dom
+     * @param {string} name class name
+     */
+    getTarget(name) {
+        let el = this;
+
+        while (el && !el.hasClass(name.replace(/[.#]+/g, ''))) {
+            el = el.parent();
+        }
+
+        return el;
+    }
 }
 
 /**
@@ -319,6 +379,8 @@ class Dragon {
             type: 1,
             // target dom's class(.xxx) or id(#xxx)
             target: '',
+            overstep: true,
+            dataName: '',
             ...param,
         };
 
@@ -368,7 +430,7 @@ class Dragon {
         }
 
         if (!this.floaty) {
-            this.spawnFloaty(this.param.type === 1 ? this.element : this.targetElement, event);
+            this.spawnFloaty(this.element, event);
         }
 
         let left;
@@ -377,11 +439,27 @@ class Dragon {
             || document.documentElement.clientHeight
             || document.body.clientHeight;
 
-        left = event.pageX - this.offsetX >= 0 ? event.pageX - this.offsetX : 0;
-        left = left + this.offset.width >= window.screen.width ? window.screen.width - this.offset.width : left;
+        const width = window.innerWidth
+            || document.documentElement.clientWidth
+            || document.body.clientWidth || 0;
 
-        top = event.pageY - this.offsetY >= 0 ? event.pageY - this.offsetY : 0;
-        top = top + this.offset.height >= height ? height - this.offset.height : top;
+        const { pageX, pageY } = event;
+        const { offsetX, offsetY } = this;
+        const offsetWidth = this.offset.width;
+        const offsetHeight = this.offset.height;
+        let index = 0;
+        const start = this.element.parent().children().index(this.element);
+
+        // 拖拽是否可超出浏览器范围
+        if (!this.param.overstep) {
+            left = pageX - offsetX;
+            top = pageY - offsetY;
+        } else {
+            left = pageX - offsetX >= 0 ? pageX - offsetX : 0;
+            left = left + offsetWidth >= width ? width - offsetWidth : left;
+            top = pageY - offsetY >= 0 ? pageY - offsetY : 0;
+            top = top + offsetHeight >= height ? height - offsetHeight : top;
+        }
 
         if (this.param.type === 1) {
             this.floaty.css({
@@ -392,20 +470,36 @@ class Dragon {
             this.floaty.css({ left: `${left}px` });
         } else {
             this.floaty.css({ top: `${top}px` });
+            const target = utils.getElementBehindPoint(this.floaty, left, top, this.param.target);
+            const pos = target.parent().children().index(target);
+            index = pos === -1 ? index : pos;
         }
+
+        if (!this.param.dataName) {
+            throw new Error('请传入数据源名称');
+        }
+
+        const data = this.vueInstance.context[this.param.dataName];
+        const old = data[start];
+        const item = data[index];
+
+        this.vueInstance.context.$set(this.vueInstance.context.testData, start, item);
+        this.vueInstance.context.$set(this.vueInstance.context.testData, index, old);
     }
 
     /**
      * disable select text
      */
-    disableSelect() {
+    disableSelect(elemet) {
+        $(elemet).css(this.disableStyle);
         $(document.body).css(this.disableStyle);
     }
 
     /**
      * enable select text
      */
-    enableSelect() {
+    enableSelect(elemet) {
+        $(elemet).css(this.disableStyle);
         $(document.body).css(this.enableStyle);
     }
 
@@ -414,17 +508,12 @@ class Dragon {
      * @param {Object} event object
      */
     startDrag(event) {
+        this.element = this.param.type === 1 ? this.element : $(event.target).getTarget(this.param.target);
         this.offset = utils.getElementOffset(this.element[0]);
         this.pageY = event.pageY;
         this.offsetX = (event.pageX - this.offset.left);
         this.offsetY = (event.pageY - this.offset.top);
         this.start = true;
-
-        // if (this.param.type !== 1) {
-        //     var target = event.target;
-
-        //     if (target !==)
-        // }
 
         $(document).on('mousemove', e => this.drag(e));
         $(document).on('mouseup', e => this.endDrag(e));
@@ -439,7 +528,7 @@ class Dragon {
         $(document).unbind('mousemove', e => this.drag(e));
         $(document).unbind('mouseup', e => this.endDrag(e));
 
-        this.enableSelect();
+        this.enableSelect(this.floaty && this.floaty[0]);
 
         if (this.floaty && this.param.type !== 1) {
             this.floaty.remove();
@@ -467,21 +556,21 @@ class Dragon {
             this.floaty = element.clone();
             // eslint-disable-next-line class-methods-use-this
             this.floaty.addClass('vue-dragon-clone');
-            element.css({ opacity: 0 });
-            this.floaty.css({ opacity: 1, width: `${offset.width}px`, padding: '0px' });
+            utils.setStyleTag('vue-dragon-clone', utils.getStyle(element[0]));
 
-            if (this.param.type === 2) {
-                this.floaty.css({ left: `${event.clientX - event.pageX + offset.left}px` });
-            } else {
-                this.floaty.css({ top: `${event.clientY - event.pageY + offset.top}px` });
-            }
+            element.css({ opacity: 0 });
+            // this.floaty.css({ opacity: 1, width: `${offset.width}px` });
+
+            this.floaty.css({ left: `${event.clientX - event.pageX + offset.left}px` });
+            this.floaty.css({ top: `${event.clientY - event.pageY + offset.top}px` });
+
 
             $(document.body).append(this.floaty[0]);
         }
 
-        this.floaty.css({ position: 'fixed', margin: '0px', 'z-index': '9999999999' });
+        this.floaty.css({ position: 'fixed', 'z-index': '9999999999' });
 
-        this.disableSelect();
+        this.disableSelect(this.floaty[0]);
     }
 }
 
