@@ -107,6 +107,7 @@ export default {
     line-height: 40px;
     background-color: #eee;
     border: 1px solid #fff;
+    padding-left: 10px;
     /* border-bottom: none; */
 }
 

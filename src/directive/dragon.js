@@ -120,6 +120,13 @@ const utils = {
         }
     },
 
+    /**
+     * get element for behind point
+     * @param {Object} behind current dom
+     * @param {number} x page x
+     * @param {number} y page y
+     * @param {string} name calss name
+     */
     getElementBehindPoint(behind, x, y, name) {
         const originalDisplay = behind.css('display');
 
@@ -137,6 +144,11 @@ const utils = {
         return element;
     },
 
+    /**
+     * get dom computed style
+     * @param {Object} el element
+     * @param {string} name style attr name
+     */
     getStyle(el, name) {
         let style = null;
 
@@ -155,6 +167,32 @@ const utils = {
         return style[name];
     },
 
+    /**
+     * css text parse to object
+     * @param {string} css css text
+     */
+    cssTextParseObject(css) {
+        const cssArray = css.replace(/;\s+/g, ';').split(';');
+        const res = {};
+
+        cssArray.forEach((item) => {
+            if (!item) {
+                return;
+            }
+
+            const attr = item.split(':');
+            const key = attr[0].replace(/[-_][^-_]/g, match => match.charAt(1).toUpperCase());
+            res[key] = attr[1].toString().trim();
+        });
+
+        return res;
+    },
+
+    /**
+     * use style tag set dom style
+     * @param {string} name class name
+     * @param {string} css css text
+     */
     setStyleTag(name, css) {
         let style = document.getElementById('dragon-clone-dom-css');
 
@@ -278,10 +316,18 @@ class Query {
         return this[0] ? new Query(this[0].parentNode) : new Query();
     }
 
+    /**
+     * get dom childrens
+     */
     children() {
         return this[0] ? new Query(this[0].children) : new Query();
     }
 
+    /**
+     * get element index of element's parent node
+     *
+     * @param {Object} element element node
+     */
     index(element) {
         return Array.prototype.slice.call(this.parent().children()).indexOf(element[0]);
     }
@@ -473,18 +519,18 @@ class Dragon {
             const target = utils.getElementBehindPoint(this.floaty, left, top, this.param.target);
             const pos = target.parent().children().index(target);
             index = pos === -1 ? index : pos;
+
+            if (!this.param.dataName) {
+                throw new Error('请传入数据源名称');
+            }
+
+            const data = this.vueInstance.context[this.param.dataName];
+            const old = data[start];
+            const item = data[index];
+
+            this.vueInstance.context.$set(this.vueInstance.context.testData, start, item);
+            this.vueInstance.context.$set(this.vueInstance.context.testData, index, old);
         }
-
-        if (!this.param.dataName) {
-            throw new Error('请传入数据源名称');
-        }
-
-        const data = this.vueInstance.context[this.param.dataName];
-        const old = data[start];
-        const item = data[index];
-
-        this.vueInstance.context.$set(this.vueInstance.context.testData, start, item);
-        this.vueInstance.context.$set(this.vueInstance.context.testData, index, old);
     }
 
     /**
@@ -556,7 +602,8 @@ class Dragon {
             this.floaty = element.clone();
             // eslint-disable-next-line class-methods-use-this
             this.floaty.addClass('vue-dragon-clone');
-            utils.setStyleTag('vue-dragon-clone', utils.getStyle(element[0]));
+            const cssText = utils.cssTextParseObject(utils.getStyle(element[0]));
+            this.floaty.css(cssText);
 
             element.css({ opacity: 0 });
             // this.floaty.css({ opacity: 1, width: `${offset.width}px` });
