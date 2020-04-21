@@ -8,6 +8,9 @@
 1. 简单拖拽（支持设置可否超出边界）
 2. 同数据源下上线拖拽排序
 
+## 效果示例：
+![image](https://github.com/yuge9413/vue-directive-dragon/blob/master/src/assets/example.gif)
+
 ## Project setup
 ```
 yarn install
