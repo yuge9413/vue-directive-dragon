@@ -221,6 +221,36 @@ const utils = {
             document.getElementsByTagName('head')[0].appendChild(style);
         }
     },
+
+    /**
+     * Debounce 处理函数
+     *
+     * @param {Function} fn 实际要执行的函数
+     * @param {number} delay  延迟时间，单位是毫秒（ms）
+     * @return {Function} 返回一个“防反跳”了的函数
+     */
+    debounce(fn, delay) {
+        let timer;
+
+        // 返回一个函数，这个函数会在一个时间区间结束后的 delay 毫秒时执行 fn 函数
+        // eslint-disable-next-line
+        return function () {
+            // 保存函数调用时的上下文和参数，传递给 fn
+            // eslint-disable-next-line
+            const context = this;
+            // eslint-disable-next-line
+            const args = arguments;
+
+            // 每次这个返回的函数被调用，就清除定时器，以保证不执行 fn
+            clearTimeout(timer);
+
+            // 当返回的函数被最后一次调用后（也就是用户停止了某个连续的操作），
+            // 再过 delay 毫秒就执行 fn
+            timer = setTimeout(() => {
+                fn.apply(context, args);
+            }, delay);
+        };
+    },
 };
 
 /**
@@ -317,7 +347,9 @@ class Query {
      */
     addClass(name) {
         for (let i = 0; i < this.length; i += 1) {
-            this[i].className = `${this[i].className} ${name}`;
+            if (!new Query(this[i]).hasClass(name)) {
+                this[i].className = `${this[i].className} ${name}`;
+            }
         }
 
         return this;
@@ -396,7 +428,9 @@ class Query {
      * @param {string} name class name
      */
     removeClass(name) {
-        this[0].className.replace(name, '');
+        if (this[0]) {
+            this[0].className = this[0].className.replace(name, '');
+        }
 
         return this;
     }
@@ -498,17 +532,11 @@ class Dragon {
             'user-select': '',
         };
 
-        this.mousedownFn = (e) => {
-            this.startDrag(e);
-        };
+        this.mousedownFn = e => this.startDrag(e);
 
-        this.mousemoveFn = (e) => {
-            this.drag(e);
-        };
+        this.mousemoveFn = e => this.drag(e);
 
-        this.mouseupFn = (e) => {
-            this.endDrag(e);
-        };
+        this.mouseupFn = e => this.endDrag(e);
 
         this.init();
     }
@@ -580,9 +608,8 @@ class Dragon {
         // 多数据间拖动
         } else if (this.param.type === 2) {
             this.floaty.css({ left: `${left}px`, top: `${top}px` });
-
+            this.element = $('.current-dragon-item').css({ opacity: 0 });
             this.dataExchange(event, start, top, left, pageX, pageY, this.param.target);
-
         // 拖动排序
         } else {
             if (this.param.direction === 'left') {
@@ -609,10 +636,10 @@ class Dragon {
      * @param {string} formDataName start data name
      * @param {string} toDataName end data name
      */
-    sort(start, top, left, x, y, targetClass, formDataName, toDataName) {
+    sort(start, top, left, x, y, targetClass, formDataName, toDataName, source) {
         const target = utils.getElementBehindPoint(this.floaty, x, y, targetClass);
         const pos = target.parent().children().index(target);
-        let index = 0;
+        let index = -1;
         index = pos === -1 ? index : pos;
 
         if (!formDataName) {
@@ -623,13 +650,17 @@ class Dragon {
         const old = data[start];
         const item = data[index];
 
+        if (!old || !item || index === -1) {
+            return;
+        }
+
         this.vueInstance.context.$set(data, start, item);
         this.vueInstance.context.$set(data, index, old);
 
         this.setResult({
             start: this.startIndex,
             end: index,
-            formDataName,
+            formDataName: source || formDataName,
             toDataName,
             item: old,
         });
@@ -700,9 +731,28 @@ class Dragon {
             return;
         }
 
+        const targetElements = $(current.container).find(this.param.target);
+
+        for (let i = 0; i < targetElements.length; i += 1) {
+            if (!$(targetElements[i]).hasClass('v-dragon-element')) {
+                $(targetElements[i]).addClass('v-dragon-element current-dragon-item');
+            }
+        }
+
         // 在同一数据中排序
         if (this.formData.dataName === current.dataName) {
-            this.sort(start, top, left, x, y, this.param.target, this.formData.dataName, this.formData.dataName);
+            this.sort(start, top, left, x, y, this.param.target, this.formData.dataName, this.formData.dataName, this.formData.source);
+        }
+
+        if (this.formData.dataName !== current.dataName) {
+            [old] = formData.splice(start, 1);
+            if (!old) {
+                return;
+            }
+            currentData.splice(start - 1 < 0 ? 0 : start - 1, 0, old);
+            const source = this.formData.source || this.formData.dataName;
+            this.formData = current;
+            this.formData.source = source;
         }
     }
 
@@ -788,6 +838,8 @@ class Dragon {
         }
         this.floaty = null;
 
+        this.element.removeClass('current-dragon-item').css({ opacity: 1 });
+
         if (this.param.type === 2) {
             this.init();
         }
@@ -808,6 +860,7 @@ class Dragon {
         // drag dom and change data
         } else {
             this.floaty = element.clone();
+            element.addClass('current-dragon-item');
             // eslint-disable-next-line class-methods-use-this
             this.floaty.addClass('vue-dragon-clone');
             const cssText = utils.getStyle(element[0]);
