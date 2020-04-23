@@ -13,7 +13,7 @@
 
         <div
             class="li-box"
-            v-dragon="{target: '.li', type: 3, dataName: 'testData'}"
+            v-dragon="{target: '.li', type: 3, dataName: 'testData', callback: sortFn}"
         >
             <ul>
                 <li
@@ -24,6 +24,42 @@
                     <span>{{ item.text }}</span>
                 </li>
             </ul>
+        </div>
+        <div
+            class="more"
+            v-dragon="{target: '.li', type: 2, sort: false, option: [
+                {
+                    dataName: 'testData2',
+                    container: '.li-box1'
+                },
+                {
+                    dataName: 'testData3',
+                    container: '.li-box2'
+                }
+            ]}"
+        >
+            <div class="li-box li-box1">
+                <ul>
+                    <li
+                        class="li"
+                        v-for="item in testData2"
+                        :key="item.value"
+                    >
+                        <span>{{ item.text }}</span>
+                    </li>
+                </ul>
+            </div>
+            <div class="li-box li-box2">
+                <ul>
+                    <li
+                        class="li"
+                        v-for="item in testData3"
+                        :key="item.value"
+                    >
+                        <span>{{ item.text }}</span>
+                    </li>
+                </ul>
+            </div>
         </div>
     </div>
 </template>
@@ -65,7 +101,64 @@ export default {
                     value: 6,
                 },
             ],
+            testData2: [
+                {
+                    text: '测试数据1',
+                    value: 11,
+                },
+                {
+                    text: '测试数据2',
+                    value: 21,
+                },
+                {
+                    text: '测试数据3',
+                    value: 31,
+                },
+                {
+                    text: '测试数据4',
+                    value: 41,
+                },
+                {
+                    text: '测试数据5',
+                    value: 51,
+                },
+                {
+                    text: '测试数据6',
+                    value: 61,
+                },
+            ],
+            testData3: [
+                {
+                    text: '测试数据1',
+                    value: 12,
+                },
+                {
+                    text: '测试数据2',
+                    value: 22,
+                },
+                {
+                    text: '测试数据3',
+                    value: 32,
+                },
+                {
+                    text: '测试数据4',
+                    value: 42,
+                },
+                {
+                    text: '测试数据5',
+                    value: 52,
+                },
+                {
+                    text: '测试数据6',
+                    value: 62,
+                },
+            ],
         };
+    },
+    methods: {
+        sortFn() {
+            // console.log(data);
+        },
     },
 };
 </script>
@@ -111,7 +204,12 @@ export default {
     /* border-bottom: none; */
 }
 
-/* .li-box ul li:last-child {
-    border-bottom: 1px solid #dadada;
-} */
+.more {
+    width: 100%;
+    margin: 100px;
+}
+
+.more .li-box {
+    display: inline-block;
+}
 </style>

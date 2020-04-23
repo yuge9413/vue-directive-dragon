@@ -439,6 +439,10 @@ class Dragon {
         // vue instance
         this.vueInstance = vm;
 
+        this.formData = null;
+
+        this.startIndex = null;
+
         this.result = {
             start: null,
             end: null,
@@ -553,15 +557,17 @@ class Dragon {
                 left: `${left}px`,
                 top: `${top}px`,
             });
+
+            this.dataExchange(event, start, top, left, pageX, pageY, this.param.target);
         } else {
             this.floaty.css({ top: `${top}px` });
-            this.sort(start, top, left, pageX, pageY);
+            this.sort(start, top, left, pageX, pageY, this.param.target, this.param.dataName, this.param.dataName);
         }
     }
 
     // data sort
-    sort(start, top, left, x, y) {
-        const target = utils.getElementBehindPoint(this.floaty, x, y, this.param.target);
+    sort(start, top, left, x, y, targetClass, formDataName, toDataName) {
+        const target = utils.getElementBehindPoint(this.floaty, x, y, targetClass);
         const pos = target.parent().children().index(target);
         let index = 0;
         index = pos === -1 ? index : pos;
@@ -570,7 +576,7 @@ class Dragon {
             throw new Error('请传入数据源名称');
         }
 
-        const data = this.vueInstance.context[this.param.dataName];
+        const data = this.vueInstance.context[formDataName];
         const old = data[start];
         const item = data[index];
 
@@ -578,11 +584,62 @@ class Dragon {
         this.vueInstance.context.$set(data, index, old);
 
         this.setResult({
+            start: this.startIndex,
             end: index,
-            formDataName: this.param.dataName,
-            toDataName: this.param.dataName,
+            formDataName,
+            toDataName,
             item: old,
         });
+    }
+
+    dataExchange(event, start, top, left, x, y, targetClass) {
+        let current = null;
+        const { option } = this.param;
+        const target = utils.getElementBehindPoint(this.floaty, x, y, targetClass);
+        // const pos = target.parent().children().index(target);
+        const formData = this.vueInstance.context[this.formData.dataName];
+
+        if (Array.isArray(option)) {
+            [current] = option.filter(item => target.getTarget(item.container));
+        }
+
+        if (!current) {
+            return;
+        }
+
+        const currentData = this.vueInstance.context[current.dataName];
+        let old = null;
+
+        if (!this.param.sort) {
+            if (this.formData.dataName !== current.dataName && formData[start]) {
+                [old] = formData.splice(start, 1);
+                currentData.push(old);
+
+                this.setResult({
+                    item: old,
+                    formDataName: this.formData.dataName,
+                    toDataName: current.dataName,
+                    start: this.startIndex,
+                    end: currentData.length - 1,
+                });
+            }
+
+            if (this.formData.dataName === current.dataName && this.result.item) {
+                const prevData = this.vueInstance.context[this.result.toDataName];
+                formData.splice(this.startIndex, 0, this.result.item);
+                prevData.splice(prevData.length - 1, 1);
+
+                this.element = $(this.formData.container).find(this.param.target).eq(this.startIndex);
+
+                this.setResult({
+                    item: null,
+                    formDataName: null,
+                    toDataName: null,
+                    start: null,
+                    end: null,
+                });
+            }
+        }
     }
 
     setResult(param) {
@@ -590,10 +647,9 @@ class Dragon {
             return;
         }
 
-        this.result = {
-            ...this.result,
-            ...param,
-        };
+        Object.keys(param).forEach((item) => {
+            this.result[item] = param[item];
+        });
     }
 
     /**
@@ -624,7 +680,12 @@ class Dragon {
         this.offsetY = (event.pageY - this.offset.top);
         this.start = true;
         const start = this.element.parent().children().index(this.element);
-        this.result.start = start;
+        this.startIndex = start;
+        const { option } = this.param;
+
+        if (Array.isArray(option)) {
+            [this.formData] = option.filter(item => this.element.getTarget(item.container));
+        }
 
         $(document).on('mousemove', this.mousemoveFn);
         $(document).on('mouseup', this.mouseupFn);
