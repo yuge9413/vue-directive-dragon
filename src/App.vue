@@ -12,14 +12,14 @@
         </div>
 
         <div
-            class="li-box"
+            class="li-box list-box"
             v-dragon="{target: '.li', type: 3, dataName: 'testData', callback: sortFn}"
         >
             <ul>
                 <li
                     class="li"
                     v-for="item in testData"
-                    :key="item.text"
+                    :key="item.value"
                 >
                     <span>{{ item.text }}</span>
                 </li>
@@ -27,7 +27,7 @@
         </div>
         <div
             class="more"
-            v-dragon="{target: '.li', type: 2, sort: true, callback: changeData, option: [
+            v-dragon="{target: '.li-other', type: 2, sort: true, callback: changeData, option: [
                 {
                     dataName: 'testData2',
                     container: '.li-box1'
@@ -41,7 +41,7 @@
             <div class="li-box li-box1">
                 <ul>
                     <li
-                        class="li"
+                        class="li-other"
                         v-for="item in testData2"
                         :key="item.value"
                     >
@@ -52,7 +52,91 @@
             <div class="li-box li-box2">
                 <ul>
                     <li
-                        class="li"
+                        class="li-other"
+                        v-for="item in testData3"
+                        :key="item.value"
+                    >
+                        <span>{{ item.text }}</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="more">
+            <div
+                class="li-box li-box3"
+                v-dragon="{target: '.li-other2', type: 2, sort: true, callback: changeData, option: [
+                    {
+                        dataName: 'testData',
+                        container: '.li-box3'
+                    },
+                    {
+                        dataName: 'testData2',
+                        container: '.li-box4'
+                    },
+                    {
+                        dataName: 'testData3',
+                        container: '.li-box5'
+                    }
+                ]}"
+            >
+                <ul>
+                    <li
+                        class="li-other2"
+                        v-for="item in testData"
+                        :key="item.value"
+                    >
+                        <span>{{ item.text }}</span>
+                    </li>
+                </ul>
+            </div>
+            <div
+                class="li-box li-box4"
+                v-dragon="{target: '.li-other2', type: 2, sort: true, callback: changeData, option: [
+                    {
+                        dataName: 'testData',
+                        container: '.li-box3'
+                    },
+                    {
+                        dataName: 'testData2',
+                        container: '.li-box4'
+                    },
+                    {
+                        dataName: 'testData3',
+                        container: '.li-box5'
+                    }
+                ]}"
+            >
+                <ul>
+                    <li
+                        class="li-other2"
+                        v-for="item in testData2"
+                        :key="item.value"
+                    >
+                        <span>{{ item.text }}</span>
+                    </li>
+                </ul>
+            </div>
+            <div
+                class="li-box li-box5"
+                v-dragon="{target: '.li-other2', type: 2, sort: true, callback: changeData, option: [
+                    {
+                        dataName: 'testData',
+                        container: '.li-box3'
+                    },
+                    {
+                        dataName: 'testData2',
+                        container: '.li-box4'
+                    },
+                    {
+                        dataName: 'testData3',
+                        container: '.li-box5'
+                    }
+                ]}"
+            >
+                <ul>
+                    <li
+                        class="li-other2"
                         v-for="item in testData3"
                         :key="item.value"
                     >
@@ -181,10 +265,11 @@ export default {
     width: 400px;
     height: 200px;
     position: absolute;
-    top: 50px;
+    top: 100px;
     left: 50%;
     text-align: center;
     border: 1px solid #aaa;
+    background: #fff;
 }
 
 .head {
@@ -192,6 +277,11 @@ export default {
     line-height: 50px;
     background-color: #eee;
     border-bottom: 1px solid #aaa;
+}
+
+.list-box {
+    margin: 100px;
+    width: 100%;
 }
 
 .li-box ul{
