@@ -255,6 +255,10 @@ class Query {
         return this[0].style[style];
     }
 
+    /**
+     * get element by index
+     * @param {number} index dom index
+     */
     eq(index) {
         return new Query(this[index]);
     }
@@ -414,6 +418,7 @@ class Dragon {
         // is start or not
         this.start = false;
 
+        // element
         this.el = element;
 
         // directive dom
@@ -439,10 +444,13 @@ class Dragon {
         // vue instance
         this.vueInstance = vm;
 
+        // source data
         this.formData = null;
 
+        // start index
         this.startIndex = null;
 
+        // callback result data
         this.result = {
             start: null,
             end: null,
@@ -469,27 +477,24 @@ class Dragon {
             'user-select': '',
         };
 
-        const context = this;
+        this.mousedownFn = (e) => {
+            this.startDrag(e);
+        };
 
-        function mousedownFn(e) {
-            context.startDrag(e);
-        }
+        this.mousemoveFn = (e) => {
+            this.drag(e);
+        };
 
-        function mousemoveFn(e) {
-            context.drag(e);
-        }
-
-        function mouseupFn(e) {
-            context.endDrag(e);
-        }
-
-        this.mousedownFn = mousedownFn;
-        this.mousemoveFn = mousemoveFn;
-        this.mouseupFn = mouseupFn;
+        this.mouseupFn = (e) => {
+            this.endDrag(e);
+        };
 
         this.init();
     }
 
+    /**
+     * init method
+     */
     init() {
         this.targetElement.unbind('mousedown', this.mousedownFn);
 
@@ -547,11 +552,14 @@ class Dragon {
             top = top + offsetHeight >= height ? height - offsetHeight : top;
         }
 
+        // 位置拖动
         if (this.param.type === 1) {
             this.floaty.css({
                 left: `${left}px`,
                 top: `${top}px`,
             });
+
+        // 多数据间拖动
         } else if (this.param.type === 2) {
             this.floaty.css({
                 left: `${left}px`,
@@ -559,13 +567,26 @@ class Dragon {
             });
 
             this.dataExchange(event, start, top, left, pageX, pageY, this.param.target);
+
+        // 拖动排序
         } else {
             this.floaty.css({ top: `${top}px` });
             this.sort(start, top, left, pageX, pageY, this.param.target, this.param.dataName, this.param.dataName);
         }
     }
 
-    // data sort
+    /**
+     * sort data
+     *
+     * @param {number} start start index
+     * @param {number} top top position
+     * @param {number} left left position
+     * @param {number} x pageX
+     * @param {number} y pageY
+     * @param {string} targetClass target dom class name
+     * @param {string} formDataName start data name
+     * @param {string} toDataName end data name
+     */
     sort(start, top, left, x, y, targetClass, formDataName, toDataName) {
         const target = utils.getElementBehindPoint(this.floaty, x, y, targetClass);
         const pos = target.parent().children().index(target);
@@ -592,6 +613,17 @@ class Dragon {
         });
     }
 
+    /**
+     * data change
+     *
+     * @param {Object} event event object
+     * @param {number} start start index
+     * @param {number} top top position
+     * @param {number} left left position
+     * @param {number} x pageX
+     * @param {number} y pageY
+     * @param {string} targetClass target dom class name
+     */
     dataExchange(event, start, top, left, x, y, targetClass) {
         let current = null;
         const { option } = this.param;
@@ -610,7 +642,9 @@ class Dragon {
         const currentData = this.vueInstance.context[current.dataName];
         let old = null;
 
+        // 不支持排序
         if (!this.param.sort) {
+            // 从源数据拖动到其他数据中
             if (this.formData.dataName !== current.dataName && formData[start]) {
                 [old] = formData.splice(start, 1);
                 currentData.push(old);
@@ -624,6 +658,7 @@ class Dragon {
                 });
             }
 
+            // 从源数据拖到其他数据又拖回源数据
             if (this.formData.dataName === current.dataName && this.result.item) {
                 const prevData = this.vueInstance.context[this.result.toDataName];
                 formData.splice(this.startIndex, 0, this.result.item);
@@ -642,6 +677,11 @@ class Dragon {
         }
     }
 
+    /**
+     * set callback result data
+     *
+     * @param {Object} param params object
+     */
     setResult(param) {
         if (typeof param !== 'object') {
             return;
