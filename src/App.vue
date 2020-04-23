@@ -27,7 +27,7 @@
         </div>
         <div
             class="more"
-            v-dragon="{target: '.li', type: 2, sort: false, callback: changeData, option: [
+            v-dragon="{target: '.li', type: 2, sort: true, callback: changeData, option: [
                 {
                     dataName: 'testData2',
                     container: '.li-box1'

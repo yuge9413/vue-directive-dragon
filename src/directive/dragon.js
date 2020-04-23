@@ -132,8 +132,10 @@ const utils = {
 
         behind.css({ display: 'none', 'pointer-events': 'none' });
 
+        const top = document.documentElement.scrollTop;
+        const left = document.documentElement.scrollLeft;
         // eslint-disable-next-line no-use-before-define
-        let element = $(document.elementFromPoint(x, y));
+        let element = $(document.elementFromPoint(x - left, y - top));
 
         while (name && element[0] && !element.hasClass(name.replace(/[.#]+/g, ''))) {
             element = element.parent();
@@ -159,7 +161,18 @@ const utils = {
         }
 
         if (!name) {
-            return style.cssText;
+            if (style.cssText) {
+                return style.cssText;
+            }
+            // 兼容火狐
+            const keys = Object.values(style);
+            let res = '';
+
+            keys.forEach((item) => {
+                res += `${item}:${style[item]};`;
+            });
+
+            return res;
         }
 
         name = name.replace(/-(\w)/g, (all, letter) => letter.toUpperCase());
@@ -434,10 +447,18 @@ class Dragon {
             // 2为左右移动，涉及数据交换
             // 3为上下拖动，涉及数据交换
             type: 1,
+            // 多数据源拖拽时 是否支持排序
+            sort: false,
             // target dom's class(.xxx) or id(#xxx)
             target: '',
+            // 是否可以超越浏览器边界
             overstep: true,
+            // 数据源名称 - 单数据源拖拽排序时使用
             dataName: '',
+            // 拖拽方向 - 单数据拖拽排序使用 - top, left
+            direction: '',
+            // 多数据源配置: [{container: '容器class or id', dataName: '数据源名称', vm: '组件实例'}]
+            option: null,
             ...param,
         };
 
@@ -542,7 +563,7 @@ class Dragon {
         const start = this.element.parent().children().index(this.element);
 
         // 拖拽是否可超出浏览器范围
-        if (!this.param.overstep) {
+        if (!this.param.overstep || this.param.type !== 1) {
             left = pageX - offsetX;
             top = pageY - offsetY;
         } else {
@@ -554,23 +575,24 @@ class Dragon {
 
         // 位置拖动
         if (this.param.type === 1) {
-            this.floaty.css({
-                left: `${left}px`,
-                top: `${top}px`,
-            });
+            this.floaty.css({ left: `${left}px`, top: `${top}px` });
 
         // 多数据间拖动
         } else if (this.param.type === 2) {
-            this.floaty.css({
-                left: `${left}px`,
-                top: `${top}px`,
-            });
+            this.floaty.css({ left: `${left}px`, top: `${top}px` });
 
             this.dataExchange(event, start, top, left, pageX, pageY, this.param.target);
 
         // 拖动排序
         } else {
-            this.floaty.css({ top: `${top}px` });
+            if (this.param.direction === 'left') {
+                this.floaty.css({ left: `${left}px` });
+            } else if (this.param.direction === 'top') {
+                this.floaty.css({ top: `${top}px` });
+            } else {
+                this.floaty.css({ top: `${top}px`, left: `${left}px` });
+            }
+
             this.sort(start, top, left, pageX, pageY, this.param.target, this.param.dataName, this.param.dataName);
         }
     }
@@ -593,7 +615,7 @@ class Dragon {
         let index = 0;
         index = pos === -1 ? index : pos;
 
-        if (!this.param.dataName) {
+        if (!formDataName) {
             throw new Error('请传入数据源名称');
         }
 
@@ -674,6 +696,13 @@ class Dragon {
                     end: null,
                 });
             }
+
+            return;
+        }
+
+        // 在同一数据中排序
+        if (this.formData.dataName === current.dataName) {
+            this.sort(start, top, left, x, y, this.param.target, this.formData.dataName, this.formData.dataName);
         }
     }
 
@@ -741,6 +770,11 @@ class Dragon {
 
         this.enableSelect(this.floaty && this.floaty[0]);
 
+        const style = document.getElementById('dragon-clone-dom-css');
+        if (style) {
+            style.innerHTML = '';
+        }
+
         if (this.floaty && this.param.type !== 1) {
             this.floaty.remove();
             this.floaty = null;
@@ -776,9 +810,10 @@ class Dragon {
             this.floaty = element.clone();
             // eslint-disable-next-line class-methods-use-this
             this.floaty.addClass('vue-dragon-clone');
-            const cssObj = utils.getStyle(element[0]);
-            const cssText = utils.cssTextParseObject(cssObj);
-            this.floaty.css(cssText);
+            const cssText = utils.getStyle(element[0]);
+            // utils.setStyleTag('vue-dragon-clone', cssText);
+            const cssObj = utils.cssTextParseObject(cssText);
+            this.floaty.css(cssObj);
 
             element.css({ opacity: 0 });
             // this.floaty.css({ opacity: 1, width: `${offset.width}px` });
