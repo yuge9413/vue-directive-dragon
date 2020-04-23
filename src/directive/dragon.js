@@ -439,6 +439,14 @@ class Dragon {
         // vue instance
         this.vueInstance = vm;
 
+        this.result = {
+            start: null,
+            end: null,
+            formDataName: null,
+            toDataName: null,
+            item: null,
+        };
+
         // set dom text disable
         this.disableStyle = {
             '-moz-user-select': '-moz-none',
@@ -568,6 +576,24 @@ class Dragon {
 
         this.vueInstance.context.$set(data, start, item);
         this.vueInstance.context.$set(data, index, old);
+
+        this.setResult({
+            end: index,
+            formDataName: this.param.dataName,
+            toDataName: this.param.dataName,
+            item: old,
+        });
+    }
+
+    setResult(param) {
+        if (typeof param !== 'object') {
+            return;
+        }
+
+        this.result = {
+            ...this.result,
+            ...param,
+        };
     }
 
     /**
@@ -597,6 +623,8 @@ class Dragon {
         this.offsetX = (event.pageX - this.offset.left);
         this.offsetY = (event.pageY - this.offset.top);
         this.start = true;
+        const start = this.element.parent().children().index(this.element);
+        this.result.start = start;
 
         $(document).on('mousemove', this.mousemoveFn);
         $(document).on('mouseup', this.mouseupFn);
@@ -617,6 +645,11 @@ class Dragon {
             this.floaty = null;
 
             this.targetElement.css({ opacity: 1 });
+
+            // call callback
+            if (typeof this.param.callback === 'function') {
+                this.param.callback.call(this.vueInstance.context, this.result);
+            }
         }
         this.floaty = null;
 
