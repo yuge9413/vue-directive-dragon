@@ -27,7 +27,7 @@
         </div>
         <div
             class="more"
-            v-dragon="{target: '.li', type: 2, sort: false, option: [
+            v-dragon="{target: '.li', type: 2, sort: false, callback: changeData, option: [
                 {
                     dataName: 'testData2',
                     container: '.li-box1'
@@ -156,8 +156,13 @@ export default {
         };
     },
     methods: {
-        sortFn() {
-            // console.log(data);
+        sortFn(data) {
+            // eslint-disable-next-line no-console
+            console.log(data);
+        },
+        changeData(data) {
+            // eslint-disable-next-line no-console
+            console.log(data);
         },
     },
 };
