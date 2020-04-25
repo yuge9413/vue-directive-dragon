@@ -7,8 +7,7 @@
             <div class="head">
                 test
             </div>
-            xxxxxxx
-            xxxxxxx
+            可直接拖动，并可设置是否超出浏览器边界
         </div>
 
         <div
@@ -240,10 +239,12 @@ export default {
         };
     },
     methods: {
+        // 排序回调
         sortFn(data) {
             // eslint-disable-next-line no-console
             console.log(data);
         },
+        // 拖动回调
         changeData(data) {
             // eslint-disable-next-line no-console
             console.log(data);
