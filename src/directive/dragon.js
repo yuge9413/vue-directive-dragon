@@ -547,25 +547,25 @@ class Dragon {
 
         let left;
         let top;
-        const height = window.innerHeight
-            || document.documentElement.clientHeight
-            || document.body.clientHeight;
-
-        const width = window.innerWidth
-            || document.documentElement.clientWidth
-            || document.body.clientWidth || 0;
 
         const { pageX, pageY } = event;
         const { offsetX, offsetY } = this;
-        const offsetWidth = this.offset.width;
-        const offsetHeight = this.offset.height;
-        const start = this.element.parent().children().index(this.element);
 
         // 拖拽是否可超出浏览器范围
         if (!this.param.overstep || this.param.type !== 1) {
             left = pageX - offsetX;
             top = pageY - offsetY;
         } else {
+            const offsetWidth = this.offset.width;
+            const offsetHeight = this.offset.height;
+            const height = window.innerHeight
+            || document.documentElement.clientHeight
+            || document.body.clientHeight;
+
+            const width = window.innerWidth
+                || document.documentElement.clientWidth
+                || document.body.clientWidth || 0;
+
             left = pageX - offsetX >= 0 ? pageX - offsetX : 0;
             left = left + offsetWidth >= width ? width - offsetWidth : left;
             top = pageY - offsetY >= 0 ? pageY - offsetY : 0;
@@ -574,10 +574,13 @@ class Dragon {
 
         // 位置拖动
         if (this.param.type === 1) {
-            this.floaty.css({ left: `${left}px`, top: `${top}px` });
+            return this.floaty.css({ left: `${left}px`, top: `${top}px` });
+        }
+
+        const start = this.element.parent().children().index(this.element);
 
         // 多数据间拖动
-        } else if (this.param.type === 2) {
+        if (this.param.type === 2) {
             this.floaty.css({ left: `${left}px`, top: `${top}px` });
             this.element = $('.current-dragon-item').css({ opacity: 0 });
             this.dataExchange(event, start, top, left, pageX, pageY, this.param.target);
@@ -769,12 +772,15 @@ class Dragon {
         this.offsetX = (event.pageX - this.offset.left);
         this.offsetY = (event.pageY - this.offset.top);
         this.start = true;
-        const start = this.element.parent().children().index(this.element);
-        this.startIndex = start;
-        const { option } = this.param;
 
-        if (Array.isArray(option)) {
-            [this.formData] = option.filter(item => this.element.getTarget(item.container));
+        if (this.param.type !== 1) {
+            const start = this.element.parent().children().index(this.element);
+            this.startIndex = start;
+            const { option } = this.param;
+
+            if (Array.isArray(option)) {
+                [this.formData] = option.filter(item => this.element.getTarget(item.container));
+            }
         }
 
         $(document).on('mousemove', this.mousemoveFn);
