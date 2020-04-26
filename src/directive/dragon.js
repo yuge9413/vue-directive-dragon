@@ -450,7 +450,7 @@ class Dragon {
             // 1为只能拖动，不涉及数据
             // 2为左右移动，涉及数据交换
             // 3为上下拖动，涉及数据交换
-            type: 1,
+            type: 'move',
             // 多数据源拖拽时 是否支持排序
             sort: false,
             // target dom's class(.xxx) or id(#xxx)
@@ -552,7 +552,7 @@ class Dragon {
         const { offsetX, offsetY } = this;
 
         // 拖拽是否可超出浏览器范围
-        if (!this.param.overstep || this.param.type !== 1) {
+        if (!this.param.overstep || this.param.type !== 'move') {
             left = pageX - offsetX;
             top = pageY - offsetY;
         } else {
@@ -573,14 +573,14 @@ class Dragon {
         }
 
         // 位置拖动
-        if (this.param.type === 1) {
+        if (this.param.type === 'move') {
             return this.floaty.css({ left: `${left}px`, top: `${top}px` });
         }
 
         const start = this.element.parent().children().index(this.element);
 
         // 多数据间拖动
-        if (this.param.type === 2) {
+        if (this.param.type === 'drag') {
             this.floaty.css({ left: `${left}px`, top: `${top}px` });
             this.element = $('.current-dragon-item').css({ opacity: 0 });
             this.dataExchange(event, start, top, left, pageX, pageY, this.param.target);
@@ -766,14 +766,14 @@ class Dragon {
      * @param {Object} event object
      */
     startDrag(event) {
-        this.element = this.param.type === 1 ? this.element : $(event.target).getTarget(this.param.target);
+        this.element = this.param.type === 'move' ? this.element : $(event.target).getTarget(this.param.target);
         this.offset = utils.getElementOffset(this.element[0]);
         this.pageY = event.pageY;
         this.offsetX = (event.pageX - this.offset.left);
         this.offsetY = (event.pageY - this.offset.top);
         this.start = true;
 
-        if (this.param.type !== 1) {
+        if (this.param.type !== 'move') {
             const start = this.element.parent().children().index(this.element);
             this.startIndex = start;
             const { option } = this.param;
@@ -802,7 +802,7 @@ class Dragon {
             style.innerHTML = '';
         }
 
-        if (this.floaty && this.param.type !== 1) {
+        if (this.floaty && this.param.type !== 'move') {
             this.floaty.remove();
             this.floaty = null;
 
@@ -817,7 +817,7 @@ class Dragon {
 
         this.element.removeClass('current-dragon-item').css({ opacity: 1 });
 
-        if (this.param.type === 2) {
+        if (this.param.type === 'drag') {
             this.init();
         }
     }
@@ -831,7 +831,7 @@ class Dragon {
         const offset = utils.getElementOffset(element[0]);
 
         // only drag dom
-        if (this.param.type === 1) {
+        if (this.param.type === 'move') {
             this.floaty = element;
             this.floaty.css({ position: 'fixed', margin: '0px', 'z-index': '9999999999' });
         // drag dom and change data
