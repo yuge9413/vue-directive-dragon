@@ -452,7 +452,7 @@ class Dragon {
             // 3为上下拖动，涉及数据交换
             type: 'move',
             // 多数据源拖拽时 是否支持排序
-            sort: false,
+            sort: true,
             // target dom's class(.xxx) or id(#xxx)
             target: '',
             // 是否可以超越浏览器边界
