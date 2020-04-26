@@ -24,6 +24,7 @@
                 </li>
             </ul>
         </div>
+        <!-- 多数据拖拽 - 第一种方式 - 指令挂载拖拽元素共同父级上 - 适用于拖拽元素在共同父级下的布局 -->
         <div
             class="more"
             v-dragon="{target: '.li-other', type: 'drag', sort: true, callback: changeData, option: [
@@ -61,6 +62,7 @@
             </div>
         </div>
 
+        <!-- 多数据拖拽 - 第二种方式 - 指令各自拖拽元素上 - 适用于拖拽元素不在共同父级下的布局 -->
         <div class="more">
             <div
                 class="li-box li-box3"
