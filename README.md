@@ -12,6 +12,10 @@
 2. 同数据源下上拖拽排序
 3. 不同数据间相互拖拽和排序
 
+待处理：
+1. 多组件情况下，使用指令
+2. 性能优化
+
 ## 效果示例：
 ![image](https://github.com/yuge9413/vue-directive-dragon/blob/master/src/assets/example.gif)
 
