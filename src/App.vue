@@ -12,7 +12,7 @@
 
         <div
             class="li-box list-box"
-            v-dragon="{target: '.li', type: 3, dataName: 'testData', callback: sortFn}"
+            v-dragon="{target: '.li', type: 'sort', dataName: 'testData', callback: sortFn}"
         >
             <ul>
                 <li
@@ -26,7 +26,7 @@
         </div>
         <div
             class="more"
-            v-dragon="{target: '.li-other', type: 2, sort: true, callback: changeData, option: [
+            v-dragon="{target: '.li-other', type: 'drag', sort: true, callback: changeData, option: [
                 {
                     dataName: 'testData2',
                     container: '.li-box1'
