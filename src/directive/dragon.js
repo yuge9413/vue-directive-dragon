@@ -447,9 +447,9 @@ class Dragon {
         // directive param
         this.param = {
             // 拖拽类型:
-            // 1为只能拖动，不涉及数据
-            // 2为左右移动，涉及数据交换
-            // 3为上下拖动，涉及数据交换
+            // move为只能拖动，不涉及数据
+            // sort为单一数据源下拖拽排序，涉及数据交换
+            // drag为多数据源相互拖动及排序，涉及数据交换
             type: 'move',
             // 多数据源拖拽时 是否支持排序
             sort: true,
@@ -461,7 +461,7 @@ class Dragon {
             dataName: '',
             // 拖拽方向 - 单数据拖拽排序使用 - top, left
             direction: '',
-            // 多数据源配置: [{container: '容器class or id', dataName: '数据源名称', vm: '组件实例'}]
+            // 多数据源配置: [{container: '容器class如：.box 或 id如：#box', dataName: '数据源名称', vm: '组件实例'}]
             option: null,
             ...param,
         };
