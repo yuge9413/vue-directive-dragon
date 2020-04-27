@@ -1,5 +1,6 @@
 <template>
     <div id="app">
+        <!-- 拖拽移动位置 -->
         <div
             class="box"
             v-dragon="{target: '.head'}"
@@ -9,7 +10,7 @@
             </div>
             可直接拖动，并可设置是否超出浏览器边界
         </div>
-
+        <!-- 单一数据源拖动排序 -->
         <div
             class="li-box list-box"
             v-dragon="{target: '.li', type: 'sort', dataName: 'testData', callback: sortFn}"
